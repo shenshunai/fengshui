@@ -1,28 +1,25 @@
 package com.xuanxue.entity;
 
-import jakarta.persistence.*;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
  * 八字结果实体
  */
-@Entity
-@Table(name = "bazi_results")
+@TableName("bazi_results")
 @Data
 public class BaziResult {
     
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @TableId
     private Long id;
     
-    @Column(nullable = false)
     private Long userId;
     
     /**
      * 出生日期时间
      */
-    @Column(nullable = false)
     private LocalDateTime birthDatetime;
     
     // ===== 四柱 =====
@@ -30,49 +27,41 @@ public class BaziResult {
     /**
      * 年柱天干
      */
-    @Column(length = 2, nullable = false)
     private String yearGan;
     
     /**
      * 年柱地支
      */
-    @Column(length = 2, nullable = false)
     private String yearZhi;
     
     /**
      * 月柱天干
      */
-    @Column(length = 2, nullable = false)
     private String monthGan;
     
     /**
      * 月柱地支
      */
-    @Column(length = 2, nullable = false)
     private String monthZhi;
     
     /**
      * 日柱天干
      */
-    @Column(length = 2, nullable = false)
     private String dayGan;
     
     /**
      * 日柱地支
      */
-    @Column(length = 2, nullable = false)
     private String dayZhi;
     
     /**
      * 时柱天干
      */
-    @Column(length = 2, nullable = false)
     private String hourGan;
     
     /**
      * 时柱地支
      */
-    @Column(length = 2, nullable = false)
     private String hourZhi;
     
     // ===== 五行统计 =====
@@ -88,41 +77,30 @@ public class BaziResult {
     /**
      * 日主
      */
-    @Column(length = 10)
     private String dayMaster;
     
     /**
      * 日主强弱: 身强/身弱/中和
      */
-    @Column(length = 10)
     private String dayMasterStrength;
     
     /**
      * 喜用五行
      */
-    @Column(length = 50)
     private String favorableElements;
     
     /**
      * 忌神五行
      */
-    @Column(length = 50)
     private String unfavorableElements;
     
     /**
      * AI分析结果
      */
-    @Column(columnDefinition = "TEXT")
     private String aiAnalysis;
     
-    @Column(updatable = false)
     private LocalDateTime createdAt;
-    
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
-    
+
     /**
      * 获取完整四柱字符串
      */
