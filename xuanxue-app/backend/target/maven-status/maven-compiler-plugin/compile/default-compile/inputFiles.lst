@@ -10,6 +10,7 @@ C:\Users\thor.wen\Desktop\fengshui\xuanxue-app\backend\src\main\java\com\xuanxue
 C:\Users\thor.wen\Desktop\fengshui\xuanxue-app\backend\src\main\java\com\xuanxue\controller\AuthController.java
 C:\Users\thor.wen\Desktop\fengshui\xuanxue-app\backend\src\main\java\com\xuanxue\service\NamingService.java
 C:\Users\thor.wen\Desktop\fengshui\xuanxue-app\backend\src\main\java\com\xuanxue\dto\NameScoreResponse.java
+C:\Users\thor.wen\Desktop\fengshui\xuanxue-app\backend\src\main\java\com\xuanxue\controller\CalendarController.java
 C:\Users\thor.wen\Desktop\fengshui\xuanxue-app\backend\src\main\java\com\xuanxue\util\NameScoreUtil.java
 C:\Users\thor.wen\Desktop\fengshui\xuanxue-app\backend\src\main\java\com\xuanxue\dto\NameScoreRequest.java
 C:\Users\thor.wen\Desktop\fengshui\xuanxue-app\backend\src\main\java\com\xuanxue\dto\NamingRequest.java
@@ -28,6 +29,7 @@ C:\Users\thor.wen\Desktop\fengshui\xuanxue-app\backend\src\main\java\com\xuanxue
 C:\Users\thor.wen\Desktop\fengshui\xuanxue-app\backend\src\main\java\com\xuanxue\config\SecurityConfig.java
 C:\Users\thor.wen\Desktop\fengshui\xuanxue-app\backend\src\main\java\com\xuanxue\repository\UserRepository.java
 C:\Users\thor.wen\Desktop\fengshui\xuanxue-app\backend\src\main\java\com\xuanxue\client\AiServiceClient.java
+C:\Users\thor.wen\Desktop\fengshui\xuanxue-app\backend\src\main\java\com\xuanxue\controller\NamingController.java
 C:\Users\thor.wen\Desktop\fengshui\xuanxue-app\backend\src\main\java\com\xuanxue\util\BaziCalculator.java
 C:\Users\thor.wen\Desktop\fengshui\xuanxue-app\backend\src\main\java\com\xuanxue\util\LunarConverter.java
 C:\Users\thor.wen\Desktop\fengshui\xuanxue-app\backend\src\main\java\com\xuanxue\XuanxueApplication.java

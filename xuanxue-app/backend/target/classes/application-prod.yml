@@ -3,8 +3,8 @@ server:
 
 spring:
   application:
-    name: xuanxue-app
-  
+    name: xuanxue-service
+
   # 数据源配置 (生产环境使用MySQL)
   datasource:
     url: jdbc:mysql://${DB_HOST:mysql}:${DB_PORT:3306}/${DB_NAME:xuanxue}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
@@ -37,6 +37,12 @@ spring:
           max-active: 8
           max-idle: 8
           min-idle: 0
+
+# AI 服务（平台部署时由网关后的 ai-service 提供）
+ai:
+  service:
+    enabled: true
+    url: ${AI_SERVICE_URL:http://ai-service:9000}
 
 # JWT配置
 jwt:

@@ -1,29 +1,45 @@
-# 玄学平台 AI 服务（Python + ChatGPT）
+# 玄学平台 AI 服务（Python + 大模型 API）
 
-本服务通过调用 OpenAI ChatGPT API，为玄学平台提供**起名**、**星座运势**、**风水**等内容的智能生成，使内容更丰富、不模板化。
+本服务通过调用大模型 API，为玄学平台提供**起名**、**星座运势**、**风水**等内容的智能生成，使内容更丰富、不模板化。
+
+支持 **DeepSeek**（推荐，低价/有免费额度）和 **OpenAI（ChatGPT）**，接口兼容，通过 `.env` 切换即可。
 
 ## 环境要求
 
 - Python 3.9+
-- OpenAI API Key
+- 任选：DeepSeek API Key 或 OpenAI API Key
 
 ## 配置
 
-1. 复制环境变量示例并填入你的 API Key：
+1. 复制环境变量示例并编辑 `.env`：
 
 ```bash
 cp .env.example .env
 ```
 
-编辑 `.env`：
+### 推荐：使用 DeepSeek（低价/有免费额度）
+
+在 [DeepSeek 开放平台](https://platform.deepseek.com) 注册并创建 API Key，新用户常有免费额度。
+
+`.env` 示例：
 
 ```
+AI_PROVIDER=deepseek
+DEEPSEEK_API_KEY=你的-deepseek-api-key
+```
+
+### 使用 OpenAI（ChatGPT，按量付费）
+
+```
+AI_PROVIDER=openai
 OPENAI_API_KEY=sk-your-openai-api-key-here
 OPENAI_MODEL=gpt-4o-mini
 ```
 
-- **OPENAI_API_KEY**：必填。在 [OpenAI 平台](https://platform.openai.com/api-keys) 创建。
-- **OPENAI_MODEL**：可选，默认 `gpt-4o-mini`（成本低、响应快）。可改为 `gpt-4o` 等获得更好效果。
+- **AI_PROVIDER**：`deepseek` 或 `openai`，默认 `deepseek`。
+- **DEEPSEEK_API_KEY**：DeepSeek 的 Key，在 [DeepSeek 控制台](https://platform.deepseek.com) 创建。
+- **OPENAI_API_KEY**：OpenAI 的 Key，在 [OpenAI 平台](https://platform.openai.com/api-keys) 创建。
+- **OPENAI_MODEL** / **DEEPSEEK_MODEL**：可选，有默认值。
 
 ## 安装与运行
 

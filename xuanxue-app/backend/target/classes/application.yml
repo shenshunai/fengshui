@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: xuanxue-app
+    name: xuanxue-service
   
   # 数据源配置 (开发环境使用H2)
   datasource:

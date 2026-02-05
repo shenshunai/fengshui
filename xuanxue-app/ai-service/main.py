@@ -10,7 +10,14 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from config import OPENAI_API_KEY, OPENAI_MODEL
+from config import (
+    AI_PROVIDER,
+    OPENAI_API_KEY,
+    OPENAI_MODEL,
+    DEEPSEEK_API_KEY,
+    DEEPSEEK_MODEL,
+    DEEPSEEK_BASE_URL,
+)
 
 app = FastAPI(title="玄学平台 AI 服务", version="1.0")
 app.add_middleware(
@@ -21,23 +28,36 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Lazy init client
+# Lazy init client（支持 OpenAI 或 DeepSeek，DeepSeek 价格低且有免费额度）
 _client = None
 
 def get_client():
     global _client
-    if not OPENAI_API_KEY:
-        raise HTTPException(status_code=503, detail="未配置 OPENAI_API_KEY，请在 .env 中设置")
-    if _client is None:
-        from openai import OpenAI
+    if _client is not None:
+        return _client
+    from openai import OpenAI
+    if AI_PROVIDER == "deepseek":
+        if not DEEPSEEK_API_KEY:
+            raise HTTPException(
+                status_code=503,
+                detail="未配置 DEEPSEEK_API_KEY（或 OPENAI_API_KEY），请在 .env 中设置。获取：https://platform.deepseek.com",
+            )
+        _client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url=DEEPSEEK_BASE_URL)
+    else:
+        if not OPENAI_API_KEY:
+            raise HTTPException(status_code=503, detail="未配置 OPENAI_API_KEY，请在 .env 中设置")
         _client = OpenAI(api_key=OPENAI_API_KEY)
     return _client
+
+
+def _model():
+    return DEEPSEEK_MODEL if AI_PROVIDER == "deepseek" else OPENAI_MODEL
 
 
 def chat(prompt: str, system: str = "你是一位专业、友好的玄学与命理顾问，回答简洁有条理。") -> str:
     client = get_client()
     r = client.chat.completions.create(
-        model=OPENAI_MODEL,
+        model=_model(),
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": prompt},
@@ -233,7 +253,13 @@ def api_fengshui(req: FengshuiRequest):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "openai_configured": bool(OPENAI_API_KEY)}
+    configured = bool(DEEPSEEK_API_KEY) if AI_PROVIDER == "deepseek" else bool(OPENAI_API_KEY)
+    return {
+        "status": "ok",
+        "ai_provider": AI_PROVIDER,
+        "configured": configured,
+        "openai_configured": configured,  # 兼容后端判断
+    }
 
 
 if __name__ == "__main__":
