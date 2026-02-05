@@ -8,3 +8,6 @@
 /dataSources.local.xml
 # 基于编辑器的 HTTP 客户端请求
 /httpRequests/
+
+*.env           # 忽略所有 .env 文件
+!.env.example   # 但是不忽略 .env.example 文件

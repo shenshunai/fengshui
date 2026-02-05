@@ -20,6 +20,21 @@ const routes = [
     path: '/divine',
     name: 'Divine',
     component: () => import('@/views/Divine.vue')
+  },
+  {
+    path: '/fengshui',
+    name: 'Fengshui',
+    component: () => import('@/views/Fengshui.vue')
+  },
+  {
+    path: '/calendar',
+    name: 'Calendar',
+    component: () => import('@/views/Calendar.vue')
+  },
+  {
+    path: '/naming',
+    name: 'Naming',
+    component: () => import('@/views/Naming.vue')
   }
 ]
 

@@ -55,6 +55,7 @@ public class SecurityConfig {
                     new AntPathRequestMatcher("/api/auth/**"),
                     new AntPathRequestMatcher("/api/zodiac/**"),
                     new AntPathRequestMatcher("/api/bazi/test"),
+                    new AntPathRequestMatcher("/api/bazi/quick"),
                     new AntPathRequestMatcher("/api/bazi/calculate"),
                     new AntPathRequestMatcher("/api/calendar/**"),
                     new AntPathRequestMatcher("/api/naming/**"),

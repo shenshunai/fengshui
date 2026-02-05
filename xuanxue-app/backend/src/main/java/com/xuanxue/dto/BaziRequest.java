@@ -26,7 +26,7 @@ public class BaziRequest {
     @Max(value = 31, message = "日期范围为1-31")
     private Integer day;
     
-    @NotNull(message = "出生时辰不能为空")
+    /** 出生时辰 0-23，不填则按午时 12 点排盘 */
     @Min(value = 0, message = "时辰范围为0-23")
     @Max(value = 23, message = "时辰范围为0-23")
     private Integer hour;

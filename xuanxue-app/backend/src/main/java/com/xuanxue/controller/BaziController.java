@@ -53,12 +53,19 @@ public class BaziController {
             @RequestParam Integer year,
             @RequestParam Integer month,
             @RequestParam Integer day,
-            @RequestParam Integer hour) {
+            @RequestParam(required = false) Integer hour) {
         BaziRequest request = new BaziRequest();
         request.setYear(year);
         request.setMonth(month);
         request.setDay(day);
-        request.setHour(hour);
+        request.setHour(hour != null ? hour : 12);
+        BaziResponse response = baziService.calculate(0L, request);
+        return Result.success(response);
+    }
+
+    @Operation(summary = "八字排盘（无需登录，支持农历与可选时辰）")
+    @PostMapping("/quick")
+    public Result<BaziResponse> quick(@Valid @RequestBody BaziRequest request) {
         BaziResponse response = baziService.calculate(0L, request);
         return Result.success(response);
     }

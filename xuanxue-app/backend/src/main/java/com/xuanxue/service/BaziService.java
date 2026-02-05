@@ -6,6 +6,7 @@ import com.xuanxue.entity.BaziResult;
 import com.xuanxue.repository.BaziResultRepository;
 import com.xuanxue.util.BaziCalculator;
 import com.xuanxue.util.BaziCalculator.GanZhi;
+import com.xuanxue.util.LunarConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,21 +30,28 @@ public class BaziService {
      */
     @Transactional
     public BaziResponse calculate(Long userId, BaziRequest request) {
+        int year = request.getYear();
+        int month = request.getMonth();
+        int day = request.getDay();
+        int hour = request.getHour() != null ? request.getHour() : 12;
+
+        // 若为农历则先转公历
+        if (Boolean.TRUE.equals(request.getIsLunar())) {
+            int[] solar = LunarConverter.lunarToSolar(year, month, day);
+            if (solar != null) {
+                year = solar[0];
+                month = solar[1];
+                day = solar[2];
+            }
+        }
+
         // 计算八字
-        BaziCalculator.BaziResult result = BaziCalculator.calculate(
-            request.getYear(),
-            request.getMonth(),
-            request.getDay(),
-            request.getHour()
-        );
-        
+        BaziCalculator.BaziResult result = BaziCalculator.calculate(year, month, day, hour);
+
         // 保存结果
         BaziResult entity = new BaziResult();
         entity.setUserId(userId);
-        entity.setBirthDatetime(LocalDateTime.of(
-            request.getYear(), request.getMonth(), request.getDay(),
-            request.getHour(), 0
-        ));
+        entity.setBirthDatetime(LocalDateTime.of(year, month, day, hour, 0));
         
         // 四柱
         entity.setYearGan(result.getYearPillar().getGan());

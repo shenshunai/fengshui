@@ -9,6 +9,9 @@
         <router-link to="/">首页</router-link>
         <router-link to="/zodiac">星座运势</router-link>
         <router-link to="/bazi">八字排盘</router-link>
+        <router-link to="/fengshui">风水</router-link>
+        <router-link to="/calendar">万年历</router-link>
+        <router-link to="/naming">起名</router-link>
         <router-link to="/divine">抽签占卜</router-link>
       </div>
     </nav>

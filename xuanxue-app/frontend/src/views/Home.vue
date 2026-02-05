@@ -18,10 +18,22 @@
         <p>精准八字命理分析，洞悉命运密码</p>
       </div>
       
-      <div class="feature-card">
+      <div class="feature-card" @click="$router.push('/fengshui')">
         <div class="icon">🏠</div>
         <h3>风水测算</h3>
         <p>家居风水布局，趋吉避凶</p>
+      </div>
+
+      <div class="feature-card" @click="$router.push('/calendar')">
+        <div class="icon">📅</div>
+        <h3>万年历</h3>
+        <p>今日宜忌，择吉避凶</p>
+      </div>
+
+      <div class="feature-card" @click="$router.push('/naming')">
+        <div class="icon">✍️</div>
+        <h3>起名</h3>
+        <p>新生儿起名与名字打分</p>
       </div>
       
       <div class="feature-card" @click="$router.push('/divine')">

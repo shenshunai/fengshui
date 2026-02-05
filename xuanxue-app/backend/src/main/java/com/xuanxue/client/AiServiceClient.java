@@ -113,6 +113,32 @@ public class AiServiceClient {
     }
 
     /**
+     * 调用 AI 获取指定日期的今日宜忌
+     */
+    public Map<String, Object> getCalendarYiJi(String date) {
+        if (!isEnabled() || date == null || date.isEmpty()) return null;
+        try {
+            Map<String, Object> body = new HashMap<>();
+            body.put("date", date);
+            String json = objectMapper.writeValueAsString(body);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            ResponseEntity<String> resp = restTemplate.exchange(
+                    baseUrl + "/api/ai/calendar",
+                    HttpMethod.POST,
+                    new HttpEntity<>(json, headers),
+                    String.class
+            );
+            if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
+                return objectMapper.readValue(resp.getBody(), Map.class);
+            }
+        } catch (Exception e) {
+            log.warn("AI 今日宜忌服务调用失败: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    /**
      * 调用 AI 生成风水内容
      */
     public String getFengshuiContent(String category) {

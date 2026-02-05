@@ -4,7 +4,13 @@
     
     <!-- 输入表单 -->
     <div class="input-card">
-      <el-form :model="form" label-width="80px">
+      <el-form :model="form" label-width="100px">
+        <el-form-item label="历法">
+          <el-radio-group v-model="form.isLunar">
+            <el-radio :label="false">阳历（公历）</el-radio>
+            <el-radio :label="true">农历</el-radio>
+          </el-radio-group>
+        </el-form-item>
         <div class="form-row">
           <el-form-item label="出生年">
             <el-input-number v-model="form.year" :min="1900" :max="2100" />
@@ -15,10 +21,13 @@
           <el-form-item label="出生日">
             <el-input-number v-model="form.day" :min="1" :max="31" />
           </el-form-item>
-          <el-form-item label="出生时">
-            <el-input-number v-model="form.hour" :min="0" :max="23" />
+          <el-form-item label="出生时" v-if="!form.unknownTime">
+            <el-input-number v-model="form.hour" :min="0" :max="23" placeholder="0-23" />
           </el-form-item>
         </div>
+        <el-form-item label=" ">
+          <el-checkbox v-model="form.unknownTime">不知道出生时间（按午时排盘）</el-checkbox>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="calculate" :loading="loading">
             开始排盘
@@ -139,7 +148,9 @@ const form = ref({
   year: 1990,
   month: 1,
   day: 1,
-  hour: 12
+  hour: 12 as number | null,
+  isLunar: false,
+  unknownTime: false
 })
 
 const loading = ref(false)
@@ -148,9 +159,14 @@ const result = ref<BaziResult | null>(null)
 const calculate = async () => {
   loading.value = true
   try {
-    const res = await axios.get('/api/bazi/test', {
-      params: form.value
-    })
+    const payload = {
+      year: form.value.year,
+      month: form.value.month,
+      day: form.value.day,
+      hour: form.value.unknownTime ? null : (form.value.hour ?? 12),
+      isLunar: form.value.isLunar
+    }
+    const res = await axios.post('/api/bazi/quick', payload)
     if (res.data.code === 200) {
       result.value = res.data.data
       ElMessage.success('排盘成功')

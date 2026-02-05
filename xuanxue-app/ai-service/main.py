@@ -67,6 +67,50 @@ class FengshuiRequest(BaseModel):
     category: Optional[str] = None  # 如 大门、客厅、卧室
 
 
+class CalendarYiJiRequest(BaseModel):
+    date: str  # YYYY-MM-DD
+
+
+# ---------- 今日宜忌（万年历） ----------
+@app.post("/api/ai/calendar")
+def api_calendar_yiji(req: CalendarYiJiRequest):
+    """根据日期用 ChatGPT 生成今日宜忌（黄历风格）。"""
+    prompt = f"""请为公历日期【{req.date}】写一段「今日宜忌」（黄历风格），要求：
+1. 宜：列出 5-8 条适宜做的事（如嫁娶、动土、开市、出行等），用顿号或逗号分隔，或分条列出
+2. 忌：列出 5-8 条不宜做的事
+3. 可加一句简短吉凶或冲煞说明（如冲某生肖、宜某方位）
+4. 直接以 JSON 格式输出，不要 markdown 代码块，键为：yi（宜，字符串或数组）、ji（忌，字符串或数组）、summary（简短说明，可选）
+例如：{{"yi":"嫁娶、开市、动土、...", "ji":"破土、安葬、...", "summary":"..."}}"""
+    try:
+        text = chat(prompt)
+        text = text.strip()
+        if text.startswith("```"):
+            text = re.sub(r"^```\w*\n?", "", text).strip()
+            text = re.sub(r"\n?```\s*$", "", text).strip()
+        m = re.search(r"\{[\s\S]*\}", text)
+        if m:
+            data = json.loads(m.group())
+            yi = data.get("yi")
+            ji = data.get("ji")
+            if isinstance(yi, list):
+                yi = "、".join(str(x) for x in yi)
+            if isinstance(ji, list):
+                ji = "、".join(str(x) for x in ji)
+            return {
+                "date": req.date,
+                "yi": yi or "诸事不宜",
+                "ji": ji or "无",
+                "summary": data.get("summary", ""),
+            }
+        return {"date": req.date, "yi": "诸事不宜", "ji": "无", "summary": text[:200]}
+    except HTTPException:
+        raise
+    except json.JSONDecodeError:
+        return {"date": req.date, "yi": "诸事不宜", "ji": "无", "summary": ""}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ---------- 起名 ----------
 @app.post("/api/ai/names")
 def api_generate_names(req: GenerateNamesRequest):
