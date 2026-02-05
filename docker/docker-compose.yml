@@ -1,0 +1,219 @@
+# 平台全栈：网关 + Nacos + 微服务 + 中间件 + 前端
+# 一键启动：在 docker 目录下执行 docker-compose up -d
+version: "3.8"
+
+services:
+  # ---------- 配置中心与注册中心 ----------
+  nacos:
+    image: nacos/nacos-server:v2.3.0
+    container_name: platform-nacos
+    environment:
+      MODE: standalone
+      NACOS_APPLICATION_PORT: 8848
+      NACOS_AUTH_ENABLE: "true"
+      NACOS_AUTH_TOKEN: "SecretKey012345678901234567890123456789012345678901234567890123456789"
+      NACOS_AUTH_IDENTITY_KEY: serverIdentity
+      NACOS_AUTH_IDENTITY_VALUE: security
+      JVM_XMS: 256m
+      JVM_XMX: 256m
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+      - "9849:9849"
+    volumes:
+      - nacos-data:/home/nacos/data
+      - nacos-logs:/home/nacos/logs
+    networks:
+      - platform-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8848/nacos/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  # ---------- 数据与中间件 ----------
+  mysql:
+    image: mysql:8.0
+    container_name: platform-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-xuanxue}
+      MYSQL_USER: ${MYSQL_USER:-xuanxue}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-xuanxue123}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ../xuanxue-app/docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "3306:3306"
+    networks:
+      - platform-network
+    restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: platform-redis
+    command: redis-server ${REDIS_PASSWORD:+--requirepass $REDIS_PASSWORD} --appendonly yes
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - platform-network
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: platform-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-admin123}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - platform-network
+    restart: unless-stopped
+
+  kafka:
+    image: bitnami/kafka:3.6
+    container_name: platform-kafka
+    environment:
+      KAFKA_CFG_NODE_ID: 0
+      KAFKA_CFG_PROCESS_ROLES: controller,broker
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka-data:/bitnami/kafka
+    networks:
+      - platform-network
+    restart: unless-stopped
+
+  # ---------- 网关 ----------
+  gateway:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.gateway
+    container_name: platform-gateway
+    environment:
+      NACOS_SERVER_ADDR: nacos:8848
+      NACOS_USERNAME: nacos
+      NACOS_PASSWORD: nacos
+      NACOS_DISCOVERY_ENABLED: "true"
+      NACOS_CONFIG_ENABLED: "true"
+    ports:
+      - "8080:8080"
+    depends_on:
+      nacos:
+        condition: service_healthy
+    networks:
+      - platform-network
+    restart: unless-stopped
+
+  # ---------- 微服务：玄学 ----------
+  xuanxue-service:
+    build:
+      context: ../xuanxue-app
+      dockerfile: docker/Dockerfile.backend
+    container_name: platform-xuanxue
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      NACOS_SERVER_ADDR: nacos:8848
+      NACOS_USERNAME: nacos
+      NACOS_PASSWORD: nacos
+      NACOS_DISCOVERY_ENABLED: "true"
+      NACOS_CONFIG_ENABLED: "true"
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-xuanxue}
+      DB_USER: ${MYSQL_USER:-xuanxue}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-xuanxue123}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-XuanXueAppSecretKeyForJWTTokenGeneration2024VeryLongAndSecure}
+      AI_SERVICE_URL: http://ai-service:9000
+    depends_on:
+      nacos:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      ai-service:
+        condition: service_started
+    networks:
+      - platform-network
+    restart: unless-stopped
+
+  # ---------- 微服务：购物（占位）----------
+  shopping-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.shopping
+    container_name: platform-shopping
+    environment:
+      NACOS_SERVER_ADDR: nacos:8848
+      NACOS_USERNAME: nacos
+      NACOS_PASSWORD: nacos
+    depends_on:
+      nacos:
+        condition: service_healthy
+    networks:
+      - platform-network
+    restart: unless-stopped
+
+  # ---------- AI 服务（Python）----------
+  ai-service:
+    build:
+      context: ../xuanxue-app/ai-service
+      dockerfile: Dockerfile
+    container_name: platform-ai
+    environment:
+      AI_PROVIDER: ${AI_PROVIDER:-deepseek}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports:
+      - "9000:9000"
+    networks:
+      - platform-network
+    restart: unless-stopped
+
+  # ---------- 前端（Nginx 静态 + 反向代理到网关）----------
+  frontend:
+    build:
+      context: ../xuanxue-app
+      dockerfile: docker/Dockerfile.frontend
+    container_name: platform-frontend
+    volumes:
+      - ./nginx-platform.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - gateway
+    networks:
+      - platform-network
+    restart: unless-stopped
+
+volumes:
+  nacos-data:
+  nacos-logs:
+  mysql-data:
+  redis-data:
+  rabbitmq-data:
+  kafka-data:
+
+networks:
+  platform-network:
+    driver: bridge
