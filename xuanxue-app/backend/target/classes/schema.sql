@@ -1,6 +1,5 @@
 -- H2 开发环境建表脚本（与 JPA 实体对应）
 
--- 用户表
 CREATE TABLE IF NOT EXISTS users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
@@ -14,7 +13,6 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP
 );
 
--- 用户资料表
 CREATE TABLE IF NOT EXISTS user_profiles (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
@@ -28,7 +26,6 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     created_at TIMESTAMP
 );
 
--- 八字结果表
 CREATE TABLE IF NOT EXISTS bazi_results (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
