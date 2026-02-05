@@ -1,10 +1,10 @@
 package com.xuanxue.config;
 
 import com.xuanxue.util.JwtUtil;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.util.StringUtils;
 import org.springframework.web.cors.CorsConfiguration;
@@ -51,15 +52,18 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                    "/api/auth/**",
-                    "/api/zodiac/**",
-                    "/api/bazi/test",
-                    "/api/bazi/calculate",
-                    "/swagger-ui/**",
-                    "/swagger-ui.html",
-                    "/v3/api-docs/**",
-                    "/api-docs/**",
-                    "/h2-console/**"
+                    new AntPathRequestMatcher("/api/auth/**"),
+                    new AntPathRequestMatcher("/api/zodiac/**"),
+                    new AntPathRequestMatcher("/api/bazi/test"),
+                    new AntPathRequestMatcher("/api/bazi/calculate"),
+                    new AntPathRequestMatcher("/api/calendar/**"),
+                    new AntPathRequestMatcher("/api/naming/**"),
+                    new AntPathRequestMatcher("/api/fengshui/**"),
+                    new AntPathRequestMatcher("/swagger-ui/**"),
+                    new AntPathRequestMatcher("/swagger-ui.html"),
+                    new AntPathRequestMatcher("/v3/api-docs/**"),
+                    new AntPathRequestMatcher("/api-docs/**"),
+                    new AntPathRequestMatcher("/h2-console/**")
                 ).permitAll()
                 .anyRequest().authenticated()
             )

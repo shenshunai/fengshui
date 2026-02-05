@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8899
 
 spring:
   application:
@@ -17,14 +17,11 @@ spring:
       enabled: true
       path: /h2-console
   
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
-        format_sql: true
+  # 启动时执行建表脚本
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
   
   # Redis配置
   data:
@@ -40,12 +37,27 @@ jwt:
   access-expiration: 86400000  # 24小时
   refresh-expiration: 604800000  # 7天
 
+# MyBatis-Plus 配置
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+
 # 日志配置
 logging:
   level:
     root: INFO
     com.xuanxue: DEBUG
-    org.hibernate.SQL: DEBUG
+    com.xuanxue.mapper: DEBUG
+
+# AI 服务（Python 调用 ChatGPT），不配置则使用本地规则生成
+ai:
+  service:
+    enabled: true
+    url: http://localhost:9000
 
 # OpenAPI文档
 springdoc:

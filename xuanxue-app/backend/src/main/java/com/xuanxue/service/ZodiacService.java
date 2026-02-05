@@ -1,5 +1,6 @@
 package com.xuanxue.service;
 
+import com.xuanxue.client.AiServiceClient;
 import com.xuanxue.dto.ZodiacFortuneResponse;
 import com.xuanxue.util.ZodiacCalculator;
 import com.xuanxue.util.ZodiacCalculator.FortuneResult;
@@ -10,14 +11,17 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 星座服务
+ * 星座服务（优先 ChatGPT，失败则本地规则）
  */
 @Service
 @RequiredArgsConstructor
 public class ZodiacService {
+
+    private final AiServiceClient aiServiceClient;
     
     /**
      * 获取所有星座列表
@@ -39,11 +43,14 @@ public class ZodiacService {
      * 获取今日运势
      */
     public ZodiacFortuneResponse getTodayFortune(String signName) {
+        Map<String, Object> ai = aiServiceClient.getZodiacFortune(signName, "today");
+        if (ai != null && !ai.isEmpty()) {
+            return mapToResponse(ai, LocalDate.now());
+        }
         ZodiacSign sign = getZodiacSignByName(signName);
         if (sign == null) {
             throw new IllegalArgumentException("未知的星座: " + signName);
         }
-        
         FortuneResult result = ZodiacCalculator.generateDailyFortune(sign, LocalDate.now());
         return toResponse(result);
     }
@@ -65,20 +72,21 @@ public class ZodiacService {
      * 获取本周运势
      */
     public ZodiacFortuneResponse getWeeklyFortune(String signName) {
+        Map<String, Object> ai = aiServiceClient.getZodiacFortune(signName, "weekly");
+        if (ai != null && !ai.isEmpty()) {
+            ZodiacFortuneResponse r = mapToResponse(ai, LocalDate.now());
+            r.setFortuneType("weekly");
+            return r;
+        }
         ZodiacSign sign = getZodiacSignByName(signName);
         if (sign == null) {
             throw new IllegalArgumentException("未知的星座: " + signName);
         }
-        
-        // 使用本周一作为种子日期
         LocalDate monday = LocalDate.now().minusDays(LocalDate.now().getDayOfWeek().getValue() - 1);
         FortuneResult result = ZodiacCalculator.generateDailyFortune(sign, monday);
-        
-        // 调整为周运势描述
         ZodiacFortuneResponse response = toResponse(result);
         response.setFortuneType("weekly");
         response.setContent(generateWeeklyContent(sign, result));
-        
         return response;
     }
     
@@ -86,21 +94,57 @@ public class ZodiacService {
      * 获取本月运势
      */
     public ZodiacFortuneResponse getMonthlyFortune(String signName) {
+        Map<String, Object> ai = aiServiceClient.getZodiacFortune(signName, "monthly");
+        if (ai != null && !ai.isEmpty()) {
+            ZodiacFortuneResponse r = mapToResponse(ai, LocalDate.now());
+            r.setFortuneType("monthly");
+            return r;
+        }
         ZodiacSign sign = getZodiacSignByName(signName);
         if (sign == null) {
             throw new IllegalArgumentException("未知的星座: " + signName);
         }
-        
-        // 使用本月一号作为种子日期
         LocalDate firstDay = LocalDate.now().withDayOfMonth(1);
         FortuneResult result = ZodiacCalculator.generateDailyFortune(sign, firstDay);
-        
-        // 调整为月运势描述
         ZodiacFortuneResponse response = toResponse(result);
         response.setFortuneType("monthly");
         response.setContent(generateMonthlyContent(sign, result));
-        
         return response;
+    }
+
+    private ZodiacFortuneResponse mapToResponse(Map<String, Object> m, LocalDate date) {
+        return ZodiacFortuneResponse.builder()
+            .zodiacSign(getStr(m, "zodiacSign"))
+            .element(getStr(m, "element"))
+            .rulingPlanet(getStr(m, "rulingPlanet"))
+            .date(date)
+            .fortuneType(getStr(m, "fortuneType"))
+            .overallScore(getInt(m, "overallScore", 80))
+            .loveScore(getInt(m, "loveScore", 75))
+            .careerScore(getInt(m, "careerScore", 78))
+            .wealthScore(getInt(m, "wealthScore", 76))
+            .healthScore(getInt(m, "healthScore", 82))
+            .luckyColor(getStr(m, "luckyColor"))
+            .luckyNumber(getInt(m, "luckyNumber", 7))
+            .luckyDirection(getStr(m, "luckyDirection"))
+            .content(getStr(m, "content"))
+            .build();
+    }
+
+    private static String getStr(Map<String, Object> m, String key) {
+        Object v = m.get(key);
+        return v != null ? v.toString() : "";
+    }
+
+    private static int getInt(Map<String, Object> m, String key, int def) {
+        Object v = m.get(key);
+        if (v == null) return def;
+        if (v instanceof Number) return ((Number) v).intValue();
+        try {
+            return Integer.parseInt(v.toString());
+        } catch (Exception e) {
+            return def;
+        }
     }
     
     /**
