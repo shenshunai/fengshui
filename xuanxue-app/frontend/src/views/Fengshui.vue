@@ -12,6 +12,16 @@
       </div>
       <div v-if="aiContent" class="ai-content">{{ aiContent }}</div>
       <div v-else-if="!aiLoading" class="ai-placeholder">点击上方按钮，获取更丰富、个性化的风水建议</div>
+      <div v-if="aiHint" class="ai-hint">
+        <strong>调用失败原因</strong>
+        <p v-if="aiReason" class="ai-reason">{{ aiReason }}</p>
+        <strong class="mt">如何开启 AI 解读？</strong>
+        <ol>
+          <li>在项目 <code>ai-service</code> 目录下复制 <code>.env.example</code> 为 <code>.env</code>，并填写 <code>OPENAI_API_KEY</code></li>
+          <li>在 <code>ai-service</code> 目录执行 <code>pip install -r requirements.txt</code> 后运行 <code>python main.py</code>（默认端口 9000）</li>
+          <li>确保后端 <code>application.yml</code> 中 <code>ai.service.enabled: true</code> 且 <code>ai.service.url</code> 指向该服务</li>
+        </ol>
+      </div>
     </div>
 
     <div class="rules-card">
@@ -91,20 +101,40 @@ import { ElMessage } from 'element-plus'
 const activeNames = ref(['door', 'living', 'bedroom'])
 const aiContent = ref('')
 const aiLoading = ref(false)
+const aiHint = ref(false)
+const aiReason = ref('')
+
+async function fetchAiStatus(): Promise<string> {
+  try {
+    const res = await axios.get('/api/fengshui/status')
+    if (res.data.code === 200 && res.data.data?.reason) {
+      return res.data.data.reason as string
+    }
+  } catch {
+    // ignore
+  }
+  return ''
+}
 
 async function fetchAiContent() {
   aiLoading.value = true
   aiContent.value = ''
+  aiHint.value = false
+  aiReason.value = ''
   try {
     const res = await axios.get('/api/fengshui/content')
     if (res.data.code === 200 && res.data.data?.content) {
       aiContent.value = res.data.data.content
       ElMessage.success('已获取 AI 解读')
     } else {
-      ElMessage.warning('暂未配置 AI 服务或生成失败，请查看下方常用规则')
+      aiHint.value = true
+      aiReason.value = await fetchAiStatus() || '暂未配置 AI 服务或生成失败'
+      ElMessage.warning('暂未配置 AI 服务或生成失败，请查看下方常用规则与开启说明')
     }
   } catch {
-    ElMessage.warning('AI 服务未启动或网络异常，请查看下方常用规则')
+    aiHint.value = true
+    aiReason.value = await fetchAiStatus() || 'AI 服务未启动或网络异常'
+    ElMessage.warning('AI 服务未启动或网络异常，请查看下方常用规则与开启说明')
   } finally {
     aiLoading.value = false
   }
@@ -156,6 +186,44 @@ async function fetchAiContent() {
 .ai-placeholder {
   font-size: 14px;
   opacity: 0.8;
+}
+
+.ai-hint {
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.ai-hint .ai-reason {
+  margin: 8px 0 0 0;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.ai-hint .mt {
+  display: block;
+  margin-top: 12px;
+}
+
+.ai-hint ol {
+  margin: 8px 0 0 0;
+  padding-left: 20px;
+}
+
+.ai-hint li {
+  margin-bottom: 6px;
+}
+
+.ai-hint code {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
 }
 
 .rules-card {

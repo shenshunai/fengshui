@@ -30,4 +30,10 @@ public class FengshuiController {
         data.put("source", content != null ? "ai" : "static");
         return Result.success(data);
     }
+
+    @Operation(summary = "获取 AI 服务状态（用于诊断调用失败原因）")
+    @GetMapping("/status")
+    public Result<Map<String, Object>> getStatus() {
+        return Result.success(aiServiceClient.getAiServiceStatus());
+    }
 }

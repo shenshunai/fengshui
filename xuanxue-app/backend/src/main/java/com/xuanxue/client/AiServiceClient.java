@@ -164,4 +164,44 @@ public class AiServiceClient {
         }
         return null;
     }
+
+    /**
+     * 检测 AI 服务状态，用于前端展示失败原因
+     */
+    public Map<String, Object> getAiServiceStatus() {
+        Map<String, Object> status = new HashMap<>();
+        status.put("enabled", enabled);
+        status.put("baseUrl", baseUrl);
+        if (!enabled || baseUrl == null || baseUrl.isEmpty()) {
+            status.put("reachable", false);
+            status.put("reason", "后端未开启 AI 服务，请在 application.yml 中设置 ai.service.enabled: true 且 ai.service.url");
+            return status;
+        }
+        try {
+            ResponseEntity<String> resp = restTemplate.getForEntity(baseUrl + "/health", String.class);
+            if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
+                JsonNode root = objectMapper.readTree(resp.getBody());
+                boolean openaiConfigured = root.has("openai_configured") && root.get("openai_configured").asBoolean();
+                status.put("reachable", true);
+                status.put("openaiConfigured", openaiConfigured);
+                if (!openaiConfigured) {
+                    status.put("reason", "ai-service 未配置 OPENAI_API_KEY，请在 ai-service 目录下 .env 中设置");
+                }
+            } else {
+                status.put("reachable", true);
+                status.put("reason", "AI 服务返回异常状态码: " + resp.getStatusCode());
+            }
+        } catch (Exception e) {
+            status.put("reachable", false);
+            String msg = e.getMessage() != null ? e.getMessage() : e.toString();
+            if (msg.contains("Connection refused") || msg.contains("connect")) {
+                status.put("reason", "AI 服务未启动或不可达（连接被拒绝），请确认已在 ai-service 目录执行 python main.py，且端口为 9000");
+            } else if (msg.contains("timed out") || msg.contains("Timeout")) {
+                status.put("reason", "连接 AI 服务超时，请确认 ai-service 已启动且网络可达");
+            } else {
+                status.put("reason", "调用 AI 服务失败: " + msg);
+            }
+        }
+        return status;
+    }
 }
