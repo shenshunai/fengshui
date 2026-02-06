@@ -6,12 +6,21 @@ spring:
     name: platform-gateway
   cloud:
     gateway:
+      # HTTP 客户端超时，避免慢下游拖死网关
+      httpclient:
+        connect-timeout: 3000
+        response-timeout: 30s
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
       routes:
-        # 购物（占位，更具体路径优先）
+        # 鉴权：/api/auth/** -> auth-service
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+        # 购物（占位）
         - id: shopping-service
           uri: lb://shopping-service
           predicates:
@@ -35,12 +44,15 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,gateway
   endpoint:
     health:
       show-details: when_authorized
+    gateway:
+      enabled: true
 
 logging:
   level:
     root: INFO
     org.springframework.cloud.gateway: DEBUG
+    # 生产可改为 INFO：org.springframework.cloud.gateway: INFO

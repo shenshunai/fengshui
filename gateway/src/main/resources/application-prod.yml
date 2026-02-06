@@ -1,0 +1,10 @@
+# 生产环境：关闭网关调试日志、健康详情按需开放
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: INFO
+
+management:
+  endpoint:
+    health:
+      show-details: when_authorized

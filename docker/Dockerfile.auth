@@ -1,0 +1,17 @@
+# 鉴权服务：先构建 common，再构建 auth-service
+FROM eclipse-temurin:11-jdk-alpine AS builder
+WORKDIR /app
+COPY pom.xml .
+COPY common-service common-service
+COPY auth-service auth-service
+COPY gateway/pom.xml gateway/
+COPY shopping-service/pom.xml shopping-service/
+COPY xuanxue-service/pom.xml xuanxue-service/
+RUN apk add --no-cache maven && mvn install -pl common-service -pl auth-service -am -DskipTests -q
+
+FROM eclipse-temurin:11-jre-alpine
+WORKDIR /app
+COPY --from=builder /app/auth-service/target/*.jar app.jar
+RUN apk add --no-cache tzdata && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo "Asia/Shanghai" > /etc/timezone
+EXPOSE 8082
+ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=prod", "app.jar"]

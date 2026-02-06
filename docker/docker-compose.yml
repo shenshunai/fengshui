@@ -44,7 +44,7 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-xuanxue123}
     volumes:
       - mysql-data:/var/lib/mysql
-      - ../xuanxue-app/docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ../sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
       - "3306:3306"
     networks:
@@ -122,11 +122,37 @@ services:
       - platform-network
     restart: unless-stopped
 
+  # ---------- 微服务：鉴权 ----------
+  auth-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.auth
+    container_name: platform-auth
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      NACOS_SERVER_ADDR: nacos:8848
+      NACOS_USERNAME: nacos
+      NACOS_PASSWORD: nacos
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-xuanxue}
+      DB_USER: ${MYSQL_USER:-xuanxue}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-xuanxue123}
+      JWT_SECRET: ${JWT_SECRET:-XuanXueAppSecretKeyForJWTTokenGeneration2024VeryLongAndSecure}
+    depends_on:
+      nacos:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    networks:
+      - platform-network
+    restart: unless-stopped
+
   # ---------- 微服务：玄学 ----------
   xuanxue-service:
     build:
-      context: ../xuanxue-app
-      dockerfile: docker/Dockerfile.backend
+      context: ..
+      dockerfile: docker/Dockerfile.xuanxue
     container_name: platform-xuanxue
     environment:
       SPRING_PROFILES_ACTIVE: prod
@@ -177,7 +203,7 @@ services:
   # ---------- AI 服务（Python）----------
   ai-service:
     build:
-      context: ../xuanxue-app/ai-service
+      context: ../ai-service
       dockerfile: Dockerfile
     container_name: platform-ai
     environment:
@@ -193,7 +219,7 @@ services:
   # ---------- 前端（Nginx 静态 + 反向代理到网关）----------
   frontend:
     build:
-      context: ../xuanxue-app
+      context: ..
       dockerfile: docker/Dockerfile.frontend
     container_name: platform-frontend
     volumes:

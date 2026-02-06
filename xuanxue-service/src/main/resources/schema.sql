@@ -1,0 +1,25 @@
+-- 玄学服务 H2 开发环境（用户表在 auth-service；此处仅八字等业务表）
+CREATE TABLE IF NOT EXISTS bazi_results (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    birth_datetime TIMESTAMP NOT NULL,
+    year_gan VARCHAR(2) NOT NULL,
+    year_zhi VARCHAR(2) NOT NULL,
+    month_gan VARCHAR(2) NOT NULL,
+    month_zhi VARCHAR(2) NOT NULL,
+    day_gan VARCHAR(2) NOT NULL,
+    day_zhi VARCHAR(2) NOT NULL,
+    hour_gan VARCHAR(2) NOT NULL,
+    hour_zhi VARCHAR(2) NOT NULL,
+    metal_count INT DEFAULT 0,
+    wood_count INT DEFAULT 0,
+    water_count INT DEFAULT 0,
+    fire_count INT DEFAULT 0,
+    earth_count INT DEFAULT 0,
+    day_master VARCHAR(10),
+    day_master_strength VARCHAR(10),
+    favorable_elements VARCHAR(50),
+    unfavorable_elements VARCHAR(50),
+    ai_analysis CLOB,
+    created_at TIMESTAMP
+);

@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 echo ========================================
-echo   平台一键部署 (Docker)
+echo   SSA-Project 一键部署 (Docker)
 echo ========================================
 cd /d "%~dp0"
 

@@ -3,7 +3,7 @@ set -e
 cd "$(dirname "$0")"
 
 echo "========================================"
-echo "  平台一键部署 (Docker)"
+echo "  SSA-Project 一键部署 (Docker)"
 echo "========================================"
 
 if [ ! -f docker/docker-compose.yml ]; then
